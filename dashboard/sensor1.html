@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <script type="text/javascript">
+        google.charts.load('current', { 'packages': ['line'] });
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+
+            $.get("http://localhost:3000/sensordata/1", function (result) {
+                console.log("got sucessfully");
+                console.log(result)
+
+                var data = new google.visualization.DataTable();
+                data.addColumn('timeofday', 'Time');
+                data.addColumn('number', 'Value');
+
+                data.addRows(result.keys);
+
+                var options = {
+                    chart: {
+                        title: 'Sensor 1 Value Monitoring Graph',
+                        subtitle: 'in xyz'
+                    },
+                    width: 900,
+                    height: 500,
+                    axes: {
+                        x: {
+                            0: { side: 'bottom' }
+                        }
+                    }
+                };
+
+                var chart = new google.charts.Line(document.getElementById('graph'));
+
+                chart.draw(data, google.charts.Line.convertOptions(options));
+            });
+
+
+        }
+    </script>
+</head>
+
+<body>
+    <br>
+    <center>
+        <div id="graph"></div>
+    </center>
+
+</body>
+
+</html>
