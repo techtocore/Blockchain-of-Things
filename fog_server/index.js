@@ -1,9 +1,13 @@
 var express = require('express');
 var bodyParser = require('body-parser');
-var { addSensor1 } = require("./utility/addSensor1.js");
 var { addToBlockChain } = require("./utility/addToBlockChain.js");
-var { Sensor1 } = require('./models/sensor1');
+var { addSensor } = require("./utility/addSensor.js");
+var { setLimits } = require("./utility/setLimits.js");
+var { Sensor } = require('./models/sensor');
+var { Limits } = require('./models/limits');
 var path = require("path");
+var moment = require('moment');
+
 
 
 var cors = require('cors');
@@ -20,39 +24,62 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 
-app.get('/sensor/:tagId', function (req, res) {
-    var val = req.query.value;
+app.post('/sensorValues', function (req, res) {
+    var data = req.body.data;
     var obj = {};
-    obj.device = "sensor" + req.params.tagId;
-    obj.value = val;
 
-    addSensor1(obj).then((ob) => {
-        console.log(ob);
-        addToBlockChain(ob).then((kk) => {
-            res.status(200).send();
+    data.forEach(element => {
+        var tmp = {};
+        tmp.parameter = element.parameter;
+        tmp.value = element.value;
+        addSensor(tmp).then((ob) => {
+            console.log(ob);
+            addToBlockChain(ob).then((kk) => {
+                console.log("\nAdded\n");
+                //res.status(200).send();
+            }).catch((err) => {
+                res.status(400).json({ err: err.message });
+            });
+
         }).catch((err) => {
             res.status(400).json({ err: err.message });
         });
+    });
+
+    res.status(200).send();
+
+});
+
+
+app.post('/setLimits', function (req, res) {
+    var data = req.body;
+    console.log(data);
+    setLimits(data).then((ob) => {
+        console.log(ob);
+        res.status(200).send();
 
     }).catch((err) => {
         res.status(400).json({ err: err.message });
     });
+
 });
 
 
-app.get('/sensordata/:tagId', function (req, res) {
 
-    Sensor1.find().then((obj) => {
+app.get('/sensordata/:parameter', function (req, res) {
+
+    Sensor.find().then((obj) => {
         var keys = [];
         for (let i = 0; i < obj.length; i++) {
-            console.log(obj[i]);
-            var st = "sensor" + req.params.tagId;
-            if (obj[i].device === st) {
-                var tmp = [];
+            //console.log(obj[i]);
+            var st = req.params.parameter;
+            if (obj[i].parameter === st) {
+                var tmp = {};
                 var time = [];
                 time = obj[i].capture_time.split(":").map(Number);;
-                tmp.push(time);
-                tmp.push(obj[i].value);
+                var sec = time[0]*3600 + time[1]*60 + time[2];
+                tmp.time = sec;
+                tmp.value = obj[i].value;
                 keys.push(tmp);
             }
 
@@ -63,16 +90,10 @@ app.get('/sensordata/:tagId', function (req, res) {
 });
 
 
-app.get("/visualize/sensor/1", function(req,res)
-{
-    res.sendFile(path.join(__dirname + "/../dashboard/sensor1.html"));
-});
-
 const PORT = 3000;
 const HOST = '0.0.0.0';
 
 
-var server = app.listen(3000, function(){
-    console.log("running");
+app.listen(3000, () => {
+    console.log(`Server Up and Running on 3000`);
 });
-//console.log('Running on http://localhost:3000');
