@@ -1,0 +1,15 @@
+{
+  "summary": {
+    "title": "Package Distribution"
+  },
+  "detail": {
+    "contributors": [],
+    "diagrams": [
+      {
+        "title": "1",
+        "thumbnail": "./public/content/images/thumbnail.jpg",
+        "id": 0
+      }
+    ]
+  }
+}
